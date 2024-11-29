@@ -1,0 +1,75 @@
+from flask import Flask, jsonify, request
+
+app = Flask(_name_)
+
+# In-memory data storage
+products = []
+product_id_counter = 1
+
+# Route to get all products
+@app.route('/products', methods=['GET'])
+def get_products():
+    return jsonify(products), 200
+
+# Route to get a single product by ID
+@app.route('/products/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    for product in products:
+        if product['id'] == product_id:
+            return jsonify(product), 200
+    return jsonify({'error': 'Product not found'}), 404
+
+# Route to create a new product
+@app.route('/products', methods=['POST'])
+def create_product():
+    global product_id_counter
+    data = request.json
+
+    # Validate input data
+    if not data or not all(key in data for key in ['name', 'description', 'price']):
+        return jsonify({'error': 'Invalid input, must include name, description, and price'}), 400
+
+    try:
+        product = {
+            'id': product_id_counter,
+            'name': data['name'],
+            'description': data['description'],
+            'price': float(data['price']),  # Ensure price is a valid float
+        }
+        products.append(product)
+        product_id_counter += 1
+        return jsonify(product), 201  # Respond with 201 Created
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid input format for price'}), 400
+
+# Route to update a product
+@app.route('/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    data = request.json
+    for product in products:
+        if product['id'] == product_id:
+            try:
+                product.update({
+                    'name': data.get('name', product['name']),
+                    'description': data.get('description', product['description']),
+                    'price': float(data.get('price', product['price']))
+                })
+                return jsonify(product), 200
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid input format for price'}), 400
+    return jsonify({'error': 'Product not found'}), 404
+
+# Route to delete a product
+@app.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    global products
+    updated_products = [product for product in products if product['id'] != product_id]
+
+    if len(updated_products) == len(products):
+        return jsonify({'error': 'Product not found'}), 404
+
+    products = updated_products
+    return jsonify({'message': 'Product deleted'}), 200
+
+if _name_ == '_main_':
+    app.run(debug=True)
