@@ -1,0 +1,12 @@
+API Endpoints:
+Get all products:
+GET /products
+Response: List of all products.
+
+Get a product by ID:
+GET /products/<product_id>
+Response: Details of the product.
+
+Create a product:
+POST /products
+Request body (JSON):
